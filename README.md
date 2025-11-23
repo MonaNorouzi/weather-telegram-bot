@@ -78,5 +78,3 @@ Then send `/start` to your bot in Telegram!
 - [OpenWeatherMap API](https://openweathermap.org/) - Weather Data Provider
 - [aiohttp](https://docs.aiohttp.org/) - Asynchronous HTTP Client
 
----
-Made with ❤️ by Mona
