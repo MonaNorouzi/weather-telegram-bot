@@ -21,3 +21,7 @@ env/
 .vscode/
 .idea/
 .DS_Store
+# Temporary Editor Backups (NEW)
+*~
+*.save
+*.swp
