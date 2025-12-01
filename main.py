@@ -6,41 +6,91 @@ import asyncio
 from telethon import TelegramClient
 import config
 from handlers.message_handler import register_handlers
+from handlers.button_handler import register_button_handlers
+from core.database_manager import db_manager
+from core.scheduler_service import WeatherScheduler
 
-logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.INFO)
+# --- Logging setup ---
+logging.basicConfig(format='[%(levelname)s] %(asctime)s - %(message)s', level=logging.INFO)
+logging.getLogger('apscheduler').setLevel(logging.WARNING)
+
+async def on_startup(client: TelegramClient, loop: asyncio.AbstractEventLoop):
+    """
+    Executes startup tasks: DB init, Handler registration, Scheduler start, and Admin notification.
+    """
+    logging.info("🗄 Initializing Database...")
+    await db_manager.init_db()
+
+    logging.info("🔌 Connecting handlers...")
+    register_handlers(client)
+    register_button_handlers(client)
+
+    logging.info("⏰ Starting Scheduler Service...")
+    scheduler = WeatherScheduler(client, loop)
+    await scheduler.start()
+    
+    client.weather_scheduler = scheduler
+    
+    try:
+        me = await client.get_me()
+        logging.info(f"\n✅✅✅ BOT STARTED: @{me.username} ✅✅✅\n")
+        
+        await client.send_message(config.ADMIN_ID, 
+            f"🚀 **System Online**\n"
+            f"⏰ Server Time: {config._get_env_variable('TZ', False) or 'UTC'}\n"
+            f"🛡 Proxy: {'✅ On' if config.PROXY_URL else '❌ Off'}"
+        )
+    except Exception as e:
+        logging.warning(f"⚠️ Could not send startup message to Admin: {e}")
 
 def main():
-    # 1. Create Loop
+    # Create explicit event loop for Python 3.10+ compatibility
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
 
-    # 2. Create Client
+    proxy_params = config.get_telethon_proxy_params()
+    if proxy_params:
+        logging.info(f" Proxy Configured: {proxy_params['addr']}:{proxy_params['port']}")
+    
     client = TelegramClient(
         'bot_session', 
         config.API_ID, 
-        config.API_HASH, 
-        loop=loop
+        config.API_HASH,
+        loop=loop,
+        proxy=proxy_params,
+        connection_retries=None, 
+        auto_reconnect=True,
+        retry_delay=5
     )
 
-    async def runner():
-        # --- Connecting Handlers ---
-        print("🔌 Connecting handlers...")
-        register_handlers(client)
-        
-        print("🚀 Starting client...")
-        await client.start(bot_token=config.BOT_TOKEN)
-        
-        me = await client.get_me()
-        print(f"\n✅✅✅ BOT IS READY: @{me.username} ✅✅✅\n")
-        
-        await client.run_until_disconnected()
-
     try:
-        loop.run_until_complete(runner())
+        print("⏳ Connecting to Telegram servers...")
+        client.start(bot_token=config.BOT_TOKEN)
+        
+        loop.run_until_complete(on_startup(client, loop))
+        
+        logging.info("--- 📡 Listening for updates (Ctrl+C to stop) ---")
+        client.run_until_disconnected()
+
     except KeyboardInterrupt:
-        print("\n🛑 Bot stopped.")
+        print("\n🛑 Bot stopped by user.")
+    except Exception as e:
+        logging.error(f"CRITICAL ERROR: {e}")
+        import traceback
+        traceback.print_exc()
     finally:
+        logging.info("--- Shutting down... ---")
+        if hasattr(client, 'weather_scheduler'):
+             try:
+                 client.weather_scheduler.scheduler.shutdown()
+             except:
+                 pass
+        
+        if client.is_connected():
+            loop.run_until_complete(client.disconnect())
+            
         loop.close()
+        print("Goodbye.")
 
 if __name__ == '__main__':
     main()

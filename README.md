@@ -1,82 +1,114 @@
-# 🌦️ Smart Weather Bot (Telegram)
+# 🌦 Telegram Weather Scheduler Bot
 
-A modular, high-performance Telegram bot built with **Python** and **Telethon**.
-This bot provides real-time weather information by intelligently parsing various location formats, including complex Google Maps links.
+A professional, fully asynchronous Telegram bot that sends automated daily weather reports to users based on their local time and location.
 
-## ✨ Key Features
+## ❓ What does this bot do?
 
-- **🧠 Smart Location Parsing:**
-  - Detects **Google Maps Short URLs** (e.g., `goo.gl`, `googleusercontent`).
-  - Extracts coordinates from standard links (`@lat,lon`).
-  - Extracts **City Names** from links (e.g., `/place/Tehran`).
-  - Supports Telegram's native **Location** attachment.
-  - Parses raw text coordinates (e.g., `35.7, 51.4`).
-- **⚡ Asynchronous Core:** Built on `Telethon` and `aiohttp` for non-blocking, fast responses.
-- **🛡️ Robust & Secure:** Handles timeouts, network errors, and keeps secrets in `.env`.
-- **🌍 Hyper-Local & City Fallback:** Uses Reverse Geocoding to display accurate city names instead of obscure neighborhood names.
-- **🧱 Modular Architecture:** Clean separation of concerns (`Core` logic vs `Handlers`).
+This bot solves the problem of checking weather apps manually.
+1.  **Collects Location:** The user sends a city name or location.
+2.  **Detects Timezone:** It automatically calculates the correct timezone for that city (no math required for the user).
+3.  **Schedules Reminder:** The user sets a preferred time (e.g., "08:00 AM"), and the bot sends a detailed weather report **at that exact local time**, every single day.
 
-## 📂 Project Structure
+It is designed to be **"set and forget"**—running reliably in the background with auto-reconnection capabilities.
 
-```text
-WeatherBot/
-├── core/
-│   ├── location_parser.py   # The "Brain": Regex & Logic to extract location
-│   └── weather_api.py       # The "Worker": Fetches data from OpenWeatherMap
-├── handlers/
-│   └── message_handler.py   # Telegram event listeners
-├── main.py                  # Entry point & Event Loop management
-├── config.py                # Configuration loader
-├── .env.example             # Template for environment variables
-└── requirements.txt         # Dependencies
-```
+---
 
-## 🚀 Installation
+## 🚀 Technical Highlights (Engineering)
 
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/YOUR_USERNAME/REPO_NAME.git
-   cd REPO_NAME
-   ```
+Built with **Python 3.10+**, **Telethon**, and **APScheduler**, this project emphasizes stability and architecture:
 
-2. **Set up Virtual Environment:**
-   ```bash
-   # Linux / macOS
-   python3 -m venv venv
-   source venv/bin/activate
+* **⚡ AsyncIO Architecture:** Uses a non-blocking event loop for high performance.
+* **🌍 Smart Timezone Conversion:** Converts user coordinates to IANA timezones (e.g., `Asia/Tehran`) to ensure 08:00 AM means 08:00 AM for *the user*, regardless of server time.
+* **🛡️ Network Resilience:** Implements "Keep-Alive" and "Auto-Reconnect" logic to handle unstable networks or proxy fluctuations without crashing.
+* **🥷 Proxy Support:** Full SOCKS5/HTTP proxy integration for restricted network environments.
+* **🔄 Self-Healing Identity:** Automatically resolves user entities (via `Force Fetch`) upon restart, preventing "InputEntityNotFound" errors common in Telethon bots.
 
-   # Windows
-   python -m venv venv
-   venv\Scripts\activate
-   ```
+## 🛠 Prerequisites
 
-3. **Install Dependencies:**
-   ```bash
-   pip install -r requirements.txt
-   ```
+* **Python 3.10+**
+* **Telegram API Credentials** (`API_ID`, `API_HASH`) from [my.telegram.org](https://my.telegram.org)
+* **Bot Token** from [@BotFather](https://t.me/BotFather)
+* **OpenWeatherMap API Key** from [openweathermap.org](https://openweathermap.org)
 
-4. **Configuration:**
-   Rename `.env.example` to `.env` and fill in your credentials:
-   ```ini
-   API_ID=YOUR_APP_ID
-   API_HASH=YOUR_APP_HASH
-   BOT_TOKEN=YOUR_BOT_TOKEN
-   OPENWEATHER_API_KEY=YOUR_OWM_KEY
-   ```
+## 📦 Installation
+
+1.  **Clone the repository:**
+    ```bash
+    git clone [https://github.com/YOUR_USERNAME/weather-scheduler-bot.git](https://github.com/YOUR_USERNAME/weather-scheduler-bot.git)
+    cd weather-scheduler-bot
+    ```
+
+2.  **Set up Virtual Environment:**
+    ```bash
+    # Windows
+    python -m venv venv
+    venv\Scripts\activate
+
+    # Linux/macOS
+    python3 -m venv venv
+    source venv/bin/activate
+    ```
+
+3.  **Install Dependencies:**
+    ```bash
+    pip install -r requirements.txt
+    ```
+
+## ⚙️ Configuration
+
+1.  Create a `.env` file in the root directory:
+    ```bash
+    cp .env.example .env
+    ```
+
+2.  **Configure your credentials in `.env`:**
+
+    ```ini
+    # --- Telegram App Credentials ---
+    API_ID=1234567
+    API_HASH=your_api_hash_here
+
+    # --- Bot Token ---
+    BOT_TOKEN=your_bot_token_here
+
+    # --- Weather Provider ---
+    OPENWEATHER_API_KEY=your_weather_api_key_here
+
+    # --- Admin Configuration ---
+    # REQUIRED: Your numeric User ID (Get it from @userinfobot)
+    # The bot sends startup health checks to this ID.
+    ADMIN_ID=123456789
+
+    # --- Network / Proxy (Optional) ---
+    # Leave empty if not needed.
+    # Example: socks5://127.0.0.1:10808
+    PROXY_URL=socks5://127.0.0.1:10808
+    ```
 
 ## ▶️ Usage
 
-Run the bot using:
-```bash
-python main.py
-```
-Then send `/start` to your bot in Telegram!
+1.  **Start the bot:**
+    ```bash
+    python main.py
+    ```
 
-## 🛠 Technologies
+2.  **Bot Workflow:**
+    * `/start` -> Introduction.
+    * **Add City** -> Send "Tehran" or a Location.
+    * **Set Time** -> Enter "07:30".
+    * ✅ Done! The bot will message you daily at 07:30 Tehran time.
 
-- [Telethon](https://docs.telethon.dev/) - Telegram MTProto API Client
-- [OpenWeatherMap API](https://openweathermap.org/) - Weather Data Provider
-- [aiohttp](https://docs.aiohttp.org/) - Asynchronous HTTP Client
+## 🏗 Project Structure
 
----
-Made with ❤️ by Mona
+* `main.py`: Entry point. Initializes the Event Loop, Client, and Scheduler integration.
+* `config.py`: Secure environment variable management.
+* `core/`:
+    * `scheduler_service.py`: Advanced job management with Heartbeat monitoring.
+    * `database_manager.py`: Async SQLite operations.
+    * `weather_api.py`: External API communication.
+    * `timezone_helper.py`: Coordinate-to-Timezone logic.
+* `handlers/`: User interaction logic (Messages & Inline Buttons).
+
+## 📄 License
+
+Distributed under the MIT License. See `LICENSE` for more information.

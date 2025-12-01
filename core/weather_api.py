@@ -2,77 +2,98 @@
 
 import aiohttp
 import config
+import logging
+from urllib.parse import quote
+from typing import Tuple, Optional
+
+async def get_coords_from_city(city_name: str) -> Tuple[Optional[float], Optional[float]]:
+    safe_city = quote(city_name)
+    url = f"https://api.openweathermap.org/geo/1.0/direct?q={safe_city}&limit=1&appid={config.WEATHER_API_KEY}"
+    
+    # Use proxy defined in config (or None)
+    req_proxy = config.PROXY_URL
+
+    try:
+        async with aiohttp.ClientSession() as session:
+            # Proxy is set dynamically here
+            async with session.get(url, proxy=req_proxy) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    if data and len(data) > 0:
+                        return data[0]['lat'], data[0]['lon']
+                else:
+                    err = await response.text()
+                    logging.error(f"Geo API Error {response.status}: {err}")
+    except Exception as e:
+        logging.error(f"Geocoding network error: {e}")
+    
+    return None, None
+
+async def resolve_location_name(lat: float, lon: float) -> str:
+    url = (
+        f"https://api.openweathermap.org/geo/1.0/reverse?"
+        f"lat={lat}&lon={lon}&"
+        f"limit=1&appid={config.WEATHER_API_KEY}"
+    )
+    req_proxy = config.PROXY_URL
+
+    try:
+        timeout = aiohttp.ClientTimeout(total=10)
+        async with aiohttp.ClientSession(timeout=timeout) as session:
+            async with session.get(url, proxy=req_proxy) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    if data and len(data) > 0:
+                        return data[0]['name']
+    except Exception as e:
+        logging.error(f"Geo API Error: {e}")
+    
+    return f"Location ({lat:.2f}, {lon:.2f})"
 
 async def get_weather(data: dict) -> str:
-    """
-    Fetches weather data. 
-    Uses Reverse Geocoding to find the REAL City Name (e.g., 'Tehran' instead of neighborhood names).
-    """
+    timeout_settings = aiohttp.ClientTimeout(total=20)
     
-    timeout_settings = aiohttp.ClientTimeout(total=10)
-    
+    # Note: Changed 'lang=fa' to 'lang=en' for English descriptions
+    if data['type'] == 'coords':
+        url = f"https://api.openweathermap.org/data/2.5/weather?lat={data['lat']}&lon={data['lon']}&appid={config.WEATHER_API_KEY}&lang=en"
+    elif data['type'] == 'city':
+        safe_city = quote(data['name'])
+        url = f"https://api.openweathermap.org/data/2.5/weather?q={safe_city}&appid={config.WEATHER_API_KEY}&lang=en"
+    else:
+        return "⛔️ Internal Error: Bad Data Type"
+
+    req_proxy = config.PROXY_URL
+
     try:
+        # trust_env=True ensures it works if a system proxy is present
         async with aiohttp.ClientSession(timeout=timeout_settings, trust_env=True) as session:
-            
-            # --- STEP 1: Determine the Display Name (City Name) ---
-            display_name = "Unknown Location"
-            
-            # If user provided coordinates, let's find the real City Name using Geo API
-            if data['type'] == 'coords':
-                try:
-                    # Geo API URL (Reverse Geocoding)
-                    geo_url = (
-                        f"http://api.openweathermap.org/geo/1.0/reverse?"
-                        f"lat={data['lat']}&lon={data['lon']}&"
-                        f"limit=1&appid={config.WEATHER_API_KEY}"
-                    )
-                    
-                    async with session.get(geo_url) as geo_response:
-                        if geo_response.status == 200:
-                            geo_data = await geo_response.json()
-                            if geo_data and len(geo_data) > 0:
-                                # Try to get English name (default) or Local name
-                                display_name = geo_data[0]['name'] 
-                                # Optional: Uncomment below to prefer Persian name if available
-                                # display_name = geo_data[0]['local_names'].get('fa', geo_data[0]['name'])
-                except Exception as e:
-                    print(f"⚠️ Geo API Warning: {e}")
-                    # If Geo API fails, we will use the name from Weather API later
-                    display_name = None
-
-            elif data['type'] == 'city':
-                display_name = data['name']
-
-            # --- STEP 2: Fetch Weather Data ---
-            if data['type'] == 'coords':
-                url = f"{config.WEATHER_BASE_URL}?lat={data['lat']}&lon={data['lon']}&appid={config.WEATHER_API_KEY}&lang=fa"
-            elif data['type'] == 'city':
-                url = f"{config.WEATHER_BASE_URL}?q={data['name']}&appid={config.WEATHER_API_KEY}&lang=fa"
-            
-            async with session.get(url) as response:
+            async with session.get(url, proxy=req_proxy) as response:
+                
                 if response.status != 200:
-                    return "⛔️ Error: Could not find weather for this location."
+                    # Log exact error
+                    error_text = await response.text()
+                    logging.error(f"Weather API Failed: {response.status} - {error_text}")
+                    
+                    if response.status == 401:
+                        return "⛔️ Error: Invalid API Key (check .env file)."
+                    elif response.status == 404:
+                        return "⛔️ Error: City not found."
+                    else:
+                        return f"⛔️ Server Error (Code {response.status})"
 
                 result = await response.json()
-                
-                # 3. Process Data
                 temp = result["main"]["temp"] - 273.15
                 desc = result["weather"][0]["description"]
                 humidity = result["main"]["humidity"]
-                
-                # Final Name Logic: 
-                # If we found a name in Step 1, use it. Otherwise use what API returned.
-                if not display_name:
-                    display_name = result.get("name", "Unknown")
+                display_name = result.get("name", data.get('name', "Unknown"))
 
                 return (
                     f"🌍 **Weather Report: {display_name}**\n"
                     f"-----------------------------------\n"
                     f"🌡 Temp: {temp:.1f}°C\n"
-                    f"☁️ Condition: {desc}\n"
+                    f"☁️ Status: {desc}\n"
                     f"💧 Humidity: {humidity}%\n"
                 )
-
     except Exception as e:
-        print(f"❌ API Error: {e}")
-        return "⛔️ Network Error: Unable to connect to weather service."
+        logging.error(f"Network Exception: {e}")
+        return f"⛔️ Network Connection Error. (Need to configure PROXY_URL in .env)"

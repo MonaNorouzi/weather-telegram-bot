@@ -1,64 +1,64 @@
 # handlers/message_handler.py
 
-from telethon import events, TelegramClient
+import re
+from telethon import events, TelegramClient, Button
 from core.location_parser import parse_input
-from core.weather_api import get_weather
+from core.weather_api import get_weather, resolve_location_name
+
 
 def register_handlers(client: TelegramClient):
-    """
-    Main function to attach event listeners to the Telegram client.
-    """
-    print("✅ [System] Loading Handlers...")
+    print("✅ [System] Loading Message Handlers...")
 
-    # --- Handler: All Incoming Messages ---
     @client.on(events.NewMessage)
     async def root_handler(event):
-        # Debug: Print immediately when a message arrives
-        # We slice [:20] to avoid flooding terminal with long texts
-        print(f"⚡️ [Event] Message received: {str(event.text)[:20]}...")
+        """
+        This simplified handler only responds to /start and normal requests.
+        """
+       
+        from handlers.conversation_handler import ACTIVE_CONVERSATIONS
         
-        # 1. Check for the /start command
-        if event.text and event.text.lower() == '/start':
+        
+        user_id = event.sender_id
+        text = event.text
+        
+        if text and text.lower() == '/start':
             await event.reply(
-                "👋 Hello! I am ready.\n"
-                "📍 Send me a: Location, Google Maps Link, or City Name."
+                "👋 **Hello! Welcome to Weather Bot.**\n\n"
+                "What would you like to do?",
+                buttons=[[Button.inline("⚙️ Manage Cities & Schedule", b"open_settings")]]
             )
             return
 
-        # 2. Extract User Input (Text or Geo Object)
-        user_input = None
-        if event.message.geo:
-            user_input = event.message.geo
-        elif event.message.text:
-            user_input = event.message.text
         
-        # If message is empty or media without caption, ignore it
-        if not user_input:
-            return
+        if user_id in ACTIVE_CONVERSATIONS:
+            return 
 
-        # 3. Send a temporary 'Thinking' message to improve UX
-        loading_msg = await event.reply("⏳ Analyzing...")
+        await process_normal_request(event)
 
-        try:
-            # 4. Parse the Input (using core/location_parser.py)
-            print("   > Parsing input...")
-            parsed_data = await parse_input(user_input)
-            
-            # If the parser couldn't find coordinates or a city name
-            if parsed_data is None:
-                print("   > Parser returned None (Invalid Input).")
-                await loading_msg.edit("⛔️ Invalid Input! Please send a valid location or link.")
-                return
 
-            # 5. Fetch Weather Data (using core/weather_api.py)
-            print(f"   > Fetching weather for: {parsed_data}")
-            weather_report = await get_weather(parsed_data)
-            
-            # 6. Update the message with the final report
-            await loading_msg.edit(weather_report)
-            print("   > ✅ Result sent successfully.")
+async def process_normal_request(event):
+    """
+    Standard logic: User sends input -> Bot sends weather.
+    """
+    user_input = event.message.geo if event.message.geo else event.message.text
+    if not user_input or (isinstance(user_input, str) and user_input.startswith('/')):
+        return 
 
-        except Exception as e:
-            # Error Handling: Log to terminal and notify user
-            print(f"❌ ERROR in Handler: {e}")
-            await loading_msg.edit(f"⚠️ Internal Error: {e}")
+    loading = await event.reply("⏳ Analyzing...")
+    
+    parsed = await parse_input(user_input)
+  
+    is_url_like = isinstance(user_input, str) and any(x in user_input.lower() for x in ["http", "google", "goo.gl", "maps"])
+
+    if not parsed:
+        if isinstance(user_input, str) and not is_url_like:
+            parsed = {'type': 'city', 'name': user_input.strip()}
+        else:
+            pass
+    
+    if not parsed:
+        await loading.edit("⛔️ Input not understood. Please send a location or city name.")
+        return
+        
+    report = await get_weather(parsed)
+    await loading.edit(report)

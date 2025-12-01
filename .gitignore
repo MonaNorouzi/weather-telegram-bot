@@ -1,27 +1,25 @@
-# Security & Secrets
-.env
 
-# Telethon Session Files
-*.session
-*.session-journal
-
-# Python Bytecode & Cache
+# General
 __pycache__/
 *.py[cod]
+*.save
+*.swp
 
-# Virtual Environments
-venv/
-env/
-.venv/
+# Environment Variables (SECRETS)
+.env
+.env.local
+
+# Database
+*.db
+*.sqlite3
+
+# Telethon Sessions (SENSITIVE)
+*.session
+*.session-journal
 
 # Logs
 *.log
 
-# OS & Editor Configuration
-.vscode/
-.idea/
+# OS generated files
 .DS_Store
-# Temporary Editor Backups (NEW)
-*~
-*.save
-*.swp
+Thumbs.db
