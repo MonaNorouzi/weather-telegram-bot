@@ -7,7 +7,7 @@ from telethon import TelegramClient
 import config
 from handlers.message_handler import register_handlers
 from handlers.button_handler import register_button_handlers
-from handlers.admin_handler import register_admin_handlers
+from handlers.admin_reload import register_admin_handlers
 from core.database_manager import db_manager
 from core.scheduler_service import WeatherScheduler
 from core.user_permission_service import UserPermissionService
