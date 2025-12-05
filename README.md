@@ -1,114 +1,224 @@
 # 🌦 Telegram Weather Scheduler Bot
 
-A professional, fully asynchronous Telegram bot that sends automated daily weather reports to users based on their local time and location.
-
-## ❓ What does this bot do?
-
-This bot solves the problem of checking weather apps manually.
-1.  **Collects Location:** The user sends a city name or location.
-2.  **Detects Timezone:** It automatically calculates the correct timezone for that city (no math required for the user).
-3.  **Schedules Reminder:** The user sets a preferred time (e.g., "08:00 AM"), and the bot sends a detailed weather report **at that exact local time**, every single day.
-
-It is designed to be **"set and forget"**—running reliably in the background with auto-reconnection capabilities.
+A professional, fully asynchronous Telegram bot that sends automated daily weather reports to users based on their local time and location. Features a **premium tier system** with dynamic UI and admin controls.
 
 ---
 
-## 🚀 Technical Highlights (Engineering)
+## ✨ Features
 
-Built with **Python 3.10+**, **Telethon**, and **APScheduler**, this project emphasizes stability and architecture:
+### 🌍 Core Features (All Users)
+- **Smart Location Detection** — Send city name, coordinates, or Google Maps link
+- **Auto Timezone** — Automatically detects timezone from location
+- **Daily Weather Reports** — Scheduled messages at your preferred local time
+- **Multiple Cities** — Track weather for multiple locations
+- **Beautiful Reports** — Detailed weather info with emoji indicators
 
-* **⚡ AsyncIO Architecture:** Uses a non-blocking event loop for high performance.
-* **🌍 Smart Timezone Conversion:** Converts user coordinates to IANA timezones (e.g., `Asia/Tehran`) to ensure 08:00 AM means 08:00 AM for *the user*, regardless of server time.
-* **🛡️ Network Resilience:** Implements "Keep-Alive" and "Auto-Reconnect" logic to handle unstable networks or proxy fluctuations without crashing.
-* **🥷 Proxy Support:** Full SOCKS5/HTTP proxy integration for restricted network environments.
-* **🔄 Self-Healing Identity:** Automatically resolves user entities (via `Force Fetch`) upon restart, preventing "InputEntityNotFound" errors common in Telethon bots.
+### 🌟 Premium Features
+- **Unlimited Cities** — No subscription limits (free users: max 3)
+- **Premium Support** — Priority support button in settings
+- **VIP Badge** — Shows premium status in settings panel
 
-## 🛠 Prerequisites
+### 👑 Admin Features
+- `/addpremium <user_id>` — Grant premium access instantly
+- `/removepremium <user_id>` — Revoke premium access
+- `/listpremium` — View all premium users
+- `/reloadpremium` — Reload from .env without restart
+- **Auto-Notification** — Users are notified when status changes
 
-* **Python 3.10+**
-* **Telegram API Credentials** (`API_ID`, `API_HASH`) from [my.telegram.org](https://my.telegram.org)
-* **Bot Token** from [@BotFather](https://t.me/BotFather)
-* **OpenWeatherMap API Key** from [openweathermap.org](https://openweathermap.org)
+---
+
+## 🚀 Technical Highlights
+
+| Feature | Description |
+|---------|-------------|
+| **AsyncIO** | Non-blocking event loop for high performance |
+| **Smart Timezone** | Coordinates → IANA timezone (e.g., `Asia/Tehran`) |
+| **Network Resilience** | Auto-reconnect & keep-alive logic |
+| **Proxy Support** | Full SOCKS5/HTTP proxy integration |
+| **Modular Design** | All files under 100 lines, clean architecture |
+| **Strategy Pattern** | Dynamic permissions based on user tier |
+| **Factory Pattern** | Dynamic UI generation per user |
+
+---
 
 ## 📦 Installation
 
-1.  **Clone the repository:**
-    ```bash
-    git clone [https://github.com/YOUR_USERNAME/weather-scheduler-bot.git](https://github.com/YOUR_USERNAME/weather-scheduler-bot.git)
-    cd weather-scheduler-bot
-    ```
+### Prerequisites
+- Python 3.10+
+- [Telegram API Credentials](https://my.telegram.org) (`API_ID`, `API_HASH`)
+- [Bot Token](https://t.me/BotFather) from @BotFather
+- [OpenWeatherMap API Key](https://openweathermap.org/api)
 
-2.  **Set up Virtual Environment:**
-    ```bash
-    # Windows
-    python -m venv venv
-    venv\Scripts\activate
+### Quick Start
 
-    # Linux/macOS
-    python3 -m venv venv
-    source venv/bin/activate
-    ```
+```bash
+# Clone repository
+git clone https://github.com/YOUR_USERNAME/weather-scheduler-bot.git
+cd weather-scheduler-bot
 
-3.  **Install Dependencies:**
-    ```bash
-    pip install -r requirements.txt
-    ```
+# Create virtual environment
+python -m venv venv
+venv\Scripts\activate  # Windows
+# source venv/bin/activate  # Linux/macOS
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Configure environment
+cp .env.example .env
+# Edit .env with your credentials
+
+# Run the bot
+python main.py
+```
+
+---
 
 ## ⚙️ Configuration
 
-1.  Create a `.env` file in the root directory:
-    ```bash
-    cp .env.example .env
-    ```
+Create a `.env` file with the following:
 
-2.  **Configure your credentials in `.env`:**
+```ini
+# Telegram Credentials
+API_ID=1234567
+API_HASH=your_api_hash_here
+BOT_TOKEN=your_bot_token_here
 
-    ```ini
-    # --- Telegram App Credentials ---
-    API_ID=1234567
-    API_HASH=your_api_hash_here
+# Weather API
+OPENWEATHER_API_KEY=your_weather_api_key_here
 
-    # --- Bot Token ---
-    BOT_TOKEN=your_bot_token_here
+# Admin (Your Telegram User ID)
+ADMIN_ID=123456789
 
-    # --- Weather Provider ---
-    OPENWEATHER_API_KEY=your_weather_api_key_here
+# Premium Users (comma-separated IDs)
+PREMIUM_USER_IDS=111111111,222222222
 
-    # --- Admin Configuration ---
-    # REQUIRED: Your numeric User ID (Get it from @userinfobot)
-    # The bot sends startup health checks to this ID.
-    ADMIN_ID=123456789
+# Proxy (Optional)
+PROXY_URL=socks5://127.0.0.1:10808
+```
 
-    # --- Network / Proxy (Optional) ---
-    # Leave empty if not needed.
-    # Example: socks5://127.0.0.1:10808
-    PROXY_URL=socks5://127.0.0.1:10808
-    ```
+> 💡 **Tip**: Get your User ID from [@userinfobot](https://t.me/userinfobot)
 
-## ▶️ Usage
+---
 
-1.  **Start the bot:**
-    ```bash
-    python main.py
-    ```
+## 🎮 User Commands
 
-2.  **Bot Workflow:**
-    * `/start` -> Introduction.
-    * **Add City** -> Send "Tehran" or a Location.
-    * **Set Time** -> Enter "07:30".
-    * ✅ Done! The bot will message you daily at 07:30 Tehran time.
+| Command | Description |
+|---------|-------------|
+| `/start` | Start the bot and see main menu |
+| `/weather` | Get current weather for a location |
+| `/settings` | Manage your scheduled cities |
+| `/help` | Show help message |
+
+---
+
+## 👑 Admin Commands
+
+| Command | Description |
+|---------|-------------|
+| `/addpremium <id>` | Add user to premium (instant) |
+| `/removepremium <id>` | Remove premium access |
+| `/listpremium` | List all premium users |
+| `/reloadpremium` | Reload from .env file |
+
+**Example:**
+```
+/addpremium 123456789
+→ ✅ Premium Added
+→ 📬 User notified + settings updated
+```
+
+---
 
 ## 🏗 Project Structure
 
-* `main.py`: Entry point. Initializes the Event Loop, Client, and Scheduler integration.
-* `config.py`: Secure environment variable management.
-* `core/`:
-    * `scheduler_service.py`: Advanced job management with Heartbeat monitoring.
-    * `database_manager.py`: Async SQLite operations.
-    * `weather_api.py`: External API communication.
-    * `timezone_helper.py`: Coordinate-to-Timezone logic.
-* `handlers/`: User interaction logic (Messages & Inline Buttons).
+```
+weather-scheduler-bot/
+├── main.py                 # Entry point
+├── config.py               # Environment configuration
+├── handlers/
+│   ├── message_handler.py      # Text message handling
+│   ├── button_handler.py       # Button click routing
+│   ├── button_actions.py       # Button action logic
+│   ├── conversation_handler.py # Multi-step wizards
+│   ├── admin_handler.py        # Admin commands
+│   ├── admin_reload.py         # Reload & registration
+│   └── premium_notifications.py # Premium messages
+└── core/
+    ├── database_manager.py     # SQLite operations
+    ├── weather_api.py          # OpenWeatherMap API
+    ├── scheduler_service.py    # Job scheduling
+    ├── scheduler_jobs.py       # Job execution
+    ├── user_permission_service.py # Permission logic
+    ├── button_factory.py       # Dynamic UI factory
+    ├── location_parser.py      # Location parsing
+    ├── timezone_helper.py      # Timezone detection
+    └── validators.py           # Input validation
+```
+
+---
+
+## 🔐 Premium System Architecture
+
+```
+┌─────────────────────────────────────────────────┐
+│                   User Action                    │
+└──────────────────────┬──────────────────────────┘
+                       ▼
+┌─────────────────────────────────────────────────┐
+│           UserPermissionService                  │
+│  ┌─────────┐  ┌─────────┐  ┌─────────┐         │
+│  │  FREE   │  │ PREMIUM │  │  ADMIN  │         │
+│  │ 3 cities│  │Unlimited│  │Unlimited│         │
+│  └─────────┘  └─────────┘  └─────────┘         │
+└──────────────────────┬──────────────────────────┘
+                       ▼
+┌─────────────────────────────────────────────────┐
+│              ButtonFactory                       │
+│  Generates dynamic UI based on user tier         │
+└─────────────────────────────────────────────────┘
+```
+
+---
+
+## 📊 Free vs Premium Comparison
+
+| Feature | Free | Premium |
+|---------|------|---------|
+| City Subscriptions | 3 max | Unlimited |
+| Premium Support | ❌ | ✅ |
+| Upgrade Prompts | Shows | Hidden |
+| Status Badge | Standard | 🌟 Premium |
+
+---
+
+## 🛠 Development
+
+### Code Quality Rules
+- ✅ All files under 100 lines
+- ✅ Single Responsibility Principle
+- ✅ Type hints throughout
+- ✅ Comprehensive logging
+
+### Testing
+```bash
+# Syntax check all files
+python -m py_compile main.py handlers/*.py core/*.py
+```
+
+---
 
 ## 📄 License
 
 Distributed under the MIT License. See `LICENSE` for more information.
+
+---
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit changes (`git commit -m 'Add AmazingFeature'`)
+4. Push to branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
