@@ -7,8 +7,10 @@ from telethon import TelegramClient
 import config
 from handlers.message_handler import register_handlers
 from handlers.button_handler import register_button_handlers
+from handlers.admin_reload import register_admin_handlers
 from core.database_manager import db_manager
 from core.scheduler_service import WeatherScheduler
+from core.user_permission_service import UserPermissionService
 
 # --- Logging setup ---
 logging.basicConfig(format='[%(levelname)s] %(asctime)s - %(message)s', level=logging.INFO)
@@ -21,9 +23,15 @@ async def on_startup(client: TelegramClient, loop: asyncio.AbstractEventLoop):
     logging.info("🗄 Initializing Database...")
     await db_manager.init_db()
 
+    logging.info("🔐 Initializing Permission Service...")
+    permission_service = UserPermissionService(config.PREMIUM_USER_IDS, config.ADMIN_ID)
+    client.permission_service = permission_service
+    logging.info(f"🌟 Premium users: {len(config.PREMIUM_USER_IDS)}")
+
     logging.info("🔌 Connecting handlers...")
     register_handlers(client)
     register_button_handlers(client)
+    register_admin_handlers(client)
 
     logging.info("⏰ Starting Scheduler Service...")
     scheduler = WeatherScheduler(client, loop)

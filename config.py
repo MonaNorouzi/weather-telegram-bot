@@ -35,6 +35,15 @@ try:
 except (ValueError, TypeError):
     raise ValueError("ADMIN_ID in .env must be an integer.")
 
+# Premium Users Configuration
+PREMIUM_USER_IDS = set()
+premium_ids_str = os.getenv("PREMIUM_USER_IDS", "")
+if premium_ids_str:
+    try:
+        PREMIUM_USER_IDS = {int(uid.strip()) for uid in premium_ids_str.split(",") if uid.strip()}
+    except ValueError:
+        raise ValueError("PREMIUM_USER_IDS in .env must be comma-separated integers.")
+
 # Base URL for OpenWeatherMap
 WEATHER_BASE_URL = "https://api.openweathermap.org/data/2.5/weather"
 

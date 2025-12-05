@@ -1,57 +1,62 @@
 # handlers/button_handler.py
+"""Button handler registration and routing"""
 
-from telethon import events, Button, TelegramClient
-from core.database_manager import db_manager
-from handlers.conversation_handler import add_city_wizard 
+from telethon import events, TelegramClient
+from core.button_factory import ButtonFactory
+import logging
+
 
 async def button_click_handler(event, client: TelegramClient):
+    """Route button clicks to appropriate handlers"""
+    from handlers.button_actions import (
+        handle_add_city, handle_delete_city, 
+        handle_upgrade_premium, handle_premium_support, show_settings
+    )
+    
     user_id = event.sender_id
-    data = event.data.decode('utf-8') 
+    data = event.data.decode('utf-8')
 
     if data == 'open_settings':
-        await show_settings_menu(event, user_id)
+        await show_settings(event, user_id, client)
 
     elif data == 'add_city_start':
-        await event.delete() 
-        await add_city_wizard(event, client)
+        await handle_add_city(event, client, user_id)
     
     elif data.startswith('del_'):
         sub_id = int(data.split('_')[1])
-        await db_manager.delete_subscription(sub_id)
-        if hasattr(client, 'weather_scheduler'):
-            await client.weather_scheduler.remove_job(sub_id)
-        
-        await event.answer("Deleted!", alert=False)
-        await show_settings_menu(event, user_id)
+        await handle_delete_city(event, client, user_id, sub_id)
+
+    elif data == 'upgrade_premium':
+        await handle_upgrade_premium(event, user_id)
+    
+    elif data == 'premium_support':
+        await handle_premium_support(event, client, user_id)
+    
+    elif data == 'ignore':
+        pass
 
     elif data == 'cancel_action':
         await event.delete()
         
     elif data == 'cancel_conv':
         await event.delete()
-        await client.send_message(user_id, "Cancelled.")
+        await client.send_message(user_id, "❌ Cancelled.")
 
-async def show_settings_menu(event, user_id):
-    subs = await db_manager.get_user_subscriptions(user_id)
-    
-    buttons = []
-    if subs:
-        for sub in subs:
-            btn_text = f"🗑 {sub['city_name']} ({sub['schedule_time']})"
-            btn_data = f"del_{sub['id']}".encode()
-            buttons.append([Button.inline(btn_text, btn_data)])
-    else:
-        buttons.append([Button.inline("(Your list is empty)", b"ignore")])
 
-    buttons.append([Button.inline("➕ Add New City", b"add_city_start")])
-    buttons.append([Button.inline("❌ Close Menu", b"cancel_action")])
+# Re-export for backward compatibility
+def send_settings_to_user(client, user_id):
+    """Wrapper for backward compatibility"""
+    from handlers.button_actions import send_settings_to_user as _send
+    return _send(client, user_id)
 
-    await event.edit(
-        "⚙️ **Settings Panel**\nHere are your scheduled weather reports:",
-        buttons=buttons
-    )
 
 def register_button_handlers(client: TelegramClient):
+    """Register button event handlers"""
+    if hasattr(client, 'permission_service'):
+        logging.info("✅ Button handlers initialized")
+    else:
+        logging.error("❌ Permission service not found!")
+    
     @client.on(events.CallbackQuery)
     async def handler(event):
         await button_click_handler(event, client)
