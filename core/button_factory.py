@@ -36,6 +36,9 @@ class ButtonFactory:
         if self.ps.can_access_feature(user_id, "premium_support"):
             buttons.append([Button.inline("🌟 Premium Support", b"premium_support")])
         
+        # Route Finder Button
+        buttons.append([Button.inline("🚗 Route Finder", b"start_route_finder")])
+        
         buttons.append([Button.inline("❌ Close Menu", b"cancel_action")])
         return buttons
     
