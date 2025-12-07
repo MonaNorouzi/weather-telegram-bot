@@ -8,6 +8,7 @@ import config
 from handlers.message_handler import register_handlers
 from handlers.button_handler import register_button_handlers
 from handlers.admin_reload import register_admin_handlers
+from handlers.route_handler import register_route_handlers
 from core.database_manager import db_manager
 from core.scheduler_service import WeatherScheduler
 from core.user_permission_service import UserPermissionService
@@ -29,6 +30,8 @@ async def on_startup(client: TelegramClient, loop: asyncio.AbstractEventLoop):
     logging.info(f"🌟 Premium users: {len(config.PREMIUM_USER_IDS)}")
 
     logging.info("🔌 Connecting handlers...")
+    # IMPORTANT: Route handlers FIRST (so they can intercept during wizard)
+    register_route_handlers(client)
     register_handlers(client)
     register_button_handlers(client)
     register_admin_handlers(client)
@@ -95,6 +98,7 @@ def main():
                  pass
         
         if client.is_connected():
+            # client.disconnect() is a coroutine, need to await it
             loop.run_until_complete(client.disconnect())
             
         loop.close()

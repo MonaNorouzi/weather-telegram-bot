@@ -28,6 +28,7 @@ except (ValueError, TypeError):
 API_HASH = _get_env_variable("API_HASH")
 BOT_TOKEN = _get_env_variable("BOT_TOKEN")
 WEATHER_API_KEY = _get_env_variable("OPENWEATHER_API_KEY")
+OPENROUTE_API_KEY = os.getenv("OPENROUTE_API_KEY") # Optional, but needed for /route
 
 # Admin ID for system notifications (Startup alerts)
 try:

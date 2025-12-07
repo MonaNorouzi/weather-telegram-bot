@@ -31,6 +31,11 @@ async def button_click_handler(event, client: TelegramClient):
     
     elif data == 'premium_support':
         await handle_premium_support(event, client, user_id)
+
+    elif data == 'start_route_finder':
+        from handlers.route_handler import start_route_wizard
+        await event.delete()  # Close settings menu
+        await start_route_wizard(client, user_id)
     
     elif data == 'ignore':
         pass
