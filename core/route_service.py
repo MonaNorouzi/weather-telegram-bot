@@ -41,6 +41,54 @@ class RouteService:
             logging.error(f"Geocoding error: {e}")
         return None
 
+    async def get_place_details(self, lat: float, lon: float) -> Optional[Dict]:
+        """Reverse geocode to get detailed place info with type"""
+        if not self.api_key: return None
+        try:
+            url = f"{self.BASE_URL}/geocode/reverse"
+            params = {
+                "api_key": self.api_key, 
+                "point.lat": lat, 
+                "point.lon": lon, 
+                "size": 1
+            }
+            async with aiohttp.ClientSession() as sess:
+                async with sess.get(url, params=params) as resp:
+                    if resp.status == 200:
+                        data = await resp.json()
+                        if data.get("features"):
+                            p = data["features"][0]["properties"]
+                            # Determine place type
+                            layer = p.get("layer", "unknown")
+                            place_type = self._map_layer_to_type(layer)
+                            # Get best name
+                            name = (p.get("name") or p.get("locality") or 
+                                    p.get("county") or p.get("region") or "Unknown")
+                            return {
+                                "place": name,
+                                "type": place_type,
+                                "layer": layer
+                            }
+        except Exception as e:
+            logging.error(f"Reverse geocoding error: {e}")
+        return None
+
+    def _map_layer_to_type(self, layer: str) -> str:
+        """Map OpenRouteService layer to place type"""
+        mapping = {
+            "locality": "city",
+            "localadmin": "city",
+            "county": "county",
+            "region": "region",
+            "neighbourhood": "suburb",
+            "borough": "suburb",
+            "venue": "poi",
+            "address": "address",
+            "street": "street",
+            "country": "country"
+        }
+        return mapping.get(layer, layer)
+
     async def get_city_name(self, lat: float, lon: float) -> Optional[str]:
         """Reverse geocode coordinates to get city/locality name"""
         if not self.api_key: return None
@@ -51,7 +99,7 @@ class RouteService:
                 "point.lat": lat, 
                 "point.lon": lon, 
                 "size": 1,
-                "layers": "locality,county,region"  # Only get city-level, not POIs
+                "layers": "locality,county,region"
             }
             async with aiohttp.ClientSession() as sess:
                 async with sess.get(url, params=params) as resp:
@@ -59,12 +107,8 @@ class RouteService:
                         data = await resp.json()
                         if data.get("features"):
                             p = data["features"][0]["properties"]
-                            # Prefer locality (city), then county, then region
-                            return (p.get("locality") or 
-                                    p.get("county") or 
-                                    p.get("region") or 
-                                    p.get("name") or 
-                                    "Unknown")
+                            return (p.get("locality") or p.get("county") or 
+                                    p.get("region") or p.get("name") or "Unknown")
         except Exception as e:
             logging.error(f"Reverse geocoding error: {e}")
         return None

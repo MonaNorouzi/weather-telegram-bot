@@ -1,6 +1,6 @@
 # 🌦 Telegram Weather Scheduler Bot
 
-A professional, fully asynchronous Telegram bot that sends automated daily weather reports to users based on their local time and location. Features a **premium tier system** with dynamic UI and admin controls.
+A professional, fully asynchronous Telegram bot that sends automated daily weather reports to users based on their local time and location. Features a **premium tier system**, **route weather planner**, and admin controls.
 
 ---
 
@@ -12,6 +12,12 @@ A professional, fully asynchronous Telegram bot that sends automated daily weath
 - **Daily Weather Reports** — Scheduled messages at your preferred local time
 - **Multiple Cities** — Track weather for multiple locations
 - **Beautiful Reports** — Detailed weather info with emoji indicators
+
+### 🚗 Route Weather Planner (NEW!)
+- **City-to-City Navigation** — Find cities along your driving route
+- **Weather at Arrival Time** — See weather forecast for when you'll arrive
+- **Traffic Options** — Choose ideal time or +30% traffic buffer
+- **Smart Wizard** — Step-by-step input (origin → destination → time → traffic)
 
 ### 🌟 Premium Features
 - **Unlimited Cities** — No subscription limits (free users: max 3)
@@ -87,6 +93,9 @@ BOT_TOKEN=your_bot_token_here
 # Weather API
 OPENWEATHER_API_KEY=your_weather_api_key_here
 
+# Route API (for Route Weather feature)
+OPENROUTE_API_KEY=your_openroute_key_here
+
 # Admin (Your Telegram User ID)
 ADMIN_ID=123456789
 
@@ -108,7 +117,33 @@ PROXY_URL=socks5://127.0.0.1:10808
 | `/start` | Start the bot and see main menu |
 | `/weather` | Get current weather for a location |
 | `/settings` | Manage your scheduled cities |
+| `/route` | **NEW** Route finder with weather |
 | `/help` | Show help message |
+
+---
+
+## 🚗 Route Weather Planner
+
+Find cities along your route with weather forecasts at arrival times.
+
+**Example:**
+```
+🛣️ Route: Tehran ➝ Saveh
+📏 140.8 km | ⏱️ ~2.2 h
+🚦 With traffic (+30%)
+
+📍 Cities & Weather:
+1. 🚩 Tehran (08:00) - ☀️ 12°C
+2. 🔹 Robatkarim (08:45) - 🌤️ 14°C
+3. 🏁 Saveh (10:15) - ☁️ 15°C
+```
+
+**How to use:**
+1. Send `/route` or click 🚗 Route Finder in Settings
+2. Enter your **starting city**
+3. Enter your **destination city**
+4. Enter **departure time** (e.g., 08:00)
+5. Choose: **1** (ideal) or **2** (with +30% traffic)
 
 ---
 
