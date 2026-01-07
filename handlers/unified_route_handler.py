@@ -413,9 +413,9 @@ async def process_smart_route(client, user_id, session, with_traffic: bool):
         
         # Temperature extremes (from ALL places)
         if coldest_temp is not None:
-            lines.append(f"❄️ Coldest: **{coldest_city}** ({coldest_type}) - {coldest_temp}°C")
+            lines.append(f"❄️ Coldest: **{coldest_city}** ({coldest_type})  {coldest_temp}°C")
         if hottest_temp is not None:
-            lines.append(f"🔥 Hottest: **{hottest_city}** ({hottest_type}) - {hottest_temp}°C")
+            lines.append(f"🔥 Hottest: **{hottest_city}** ({hottest_type})  {hottest_temp}°C")
         
         # Performance metrics - Complete breakdown of all phases
         lines.append("")
