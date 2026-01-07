@@ -24,8 +24,8 @@ def register_handlers(client: TelegramClient):
         if text and text.lower() == '/start':
             # Buttons for all users
             buttons = [
-                [Button.inline("⚙️ Manage Cities & Schedule", b"open_settings")],
-                [Button.inline("🗑️ Clear All Caches", b"admin_clear_cache")]
+                [Button.inline("⚙️ Manage Cities & Schedule", b"open_settings")]
+                
             ]
             
             await event.reply(
