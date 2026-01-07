@@ -3,7 +3,7 @@
 import aiohttp
 import logging
 import polyline
-from typing import Optional, Dict, List, Tuple
+from typing import Optional, Dict, Tuple
 import asyncio
 
 logger = logging.getLogger(__name__)
@@ -16,34 +16,31 @@ class MapboxService:
         self.api_key = api_key
         self.base_url = "https://api.mapbox.com/directions/v5/mapbox/driving"
         self.max_retries = 3
-        self.retry_delay = 1.0  # seconds
+        self.retry_delay = 1.0
     
     async def get_route(
         self, 
         origin: Tuple[float, float], 
         dest: Tuple[float, float]
     ) -> Optional[Dict]:
-        """
-        Get driving route with full geometry from Mapbox.
+        """Get driving route with full geometry from Mapbox.
         
         Args:
             origin: (latitude, longitude) of starting point
             dest: (latitude, longitude) of destination
             
         Returns:
-            Dict with coordinates, distance, duration, and polyline
-            None if request fails after retries
+            Dict with coordinates, distance, duration, and polyline or None if failed
         """
-        # Mapbox uses lon,lat format (opposite of lat,lon!)
         coordinates = f"{origin[1]},{origin[0]};{dest[1]},{dest[0]}"
         url = f"{self.base_url}/{coordinates}"
         
         params = {
             "access_token": self.api_key,
-            "geometries": "polyline6",  # Precision 1e-6 (better than polyline5)
+            "geometries": "polyline6",
             "overview": "full",
-            "steps": "false",  # We don't need turn-by-turn
-            "annotations": "duration"  # Get segment durations
+            "steps": "false",
+            "annotations": "duration"
         }
         
         for attempt in range(self.max_retries):
@@ -55,33 +52,30 @@ class MapboxService:
                             
                             if data.get("code") == "Ok" and data.get("routes"):
                                 route = data["routes"][0]
-                                
-                                # Decode polyline to coordinates
                                 geometry = route["geometry"]
                                 coordinates_decoded = polyline.decode(geometry, geojson=False, precision=6)
                                 
                                 return {
-                                    "coordinates": coordinates_decoded,  # List of (lat, lon)
-                                    "distance": route["distance"],  # meters
-                                    "duration": route["duration"],  # seconds
-                                    "polyline": geometry  # encoded polyline
+                                    "coordinates": coordinates_decoded,
+                                    "distance": route["distance"],
+                                    "duration": route["duration"],
+                                    "polyline": geometry
                                 }
                             else:
                                 error_code = data.get("code", "Unknown")
                                 logger.error(f"Mapbox error code: {error_code}")
                                 
                         elif resp.status == 429:
-                            # Rate limit exceeded
-                            logger.warning(f"Mapbox rate limit exceeded (attempt {attempt + 1}/{self.max_retries})")
+                            logger.warning(f"Mapbox rate limit (attempt {attempt + 1}/{self.max_retries})")
                             if attempt < self.max_retries - 1:
                                 await asyncio.sleep(self.retry_delay * (2 ** attempt))
                                 continue
                             else:
-                                logger.error("Mapbox quota exhausted, fallback needed")
+                                logger.error("Mapbox quota exhausted")
                                 return None
                         
                         elif resp.status == 401:
-                            logger.error("Mapbox API key invalid!")
+                            logger.error("Mapbox API key invalid")
                             return None
                         
                         else:
