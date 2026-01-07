@@ -173,7 +173,6 @@ Uses **pgRouting** (PostgreSQL extension) for intelligent pathfinding:
 - **Python**: 3.11 or higher
 - **PostgreSQL**: 14+ with **PostGIS** and **pgRouting** extensions
 - **Redis**: 6+ (optional but highly recommended for performance)
-- **Docker**: For OSRM routing engine (optional)
 
 ### 1️⃣ Clone Repository
 
@@ -240,18 +239,6 @@ REDIS_PASSWORD=
 
 ### 4️⃣ Setup Databases
 
-#### Option A: Using Docker (Recommended)
-
-```bash
-# Start PostgreSQL and Redis
-docker-compose up -d postgres redis
-
-# Initialize database schema
-python database/init_db.py
-```
-
-#### Option B: Manual Setup
-
 **PostgreSQL**:
 ```bash
 # Install PostgreSQL with PostGIS and pgRouting
@@ -278,7 +265,6 @@ redis-server
 ```
 
 📖 **Detailed Setup Guides**:
-- [docs/DOCKER_QUICK_START.md](docs/DOCKER_QUICK_START.md) - Docker setup
 - [docs/OSRM_SETUP_GUIDE.md](docs/OSRM_SETUP_GUIDE.md) - Local routing engine
 - [docs/REDIS_SETUP.md](docs/REDIS_SETUP.md) - Redis configuration
 
@@ -500,20 +486,41 @@ Peak Memory Usage: 180 MB (Redis)
 
 ---
 
-## 🐳 Deployment
+## 🚀 Deployment
 
-### Docker Compose (Recommended)
+### Manual Deployment (Production)
 
+**Requirements**:
+- Linux server (Ubuntu 20.04+ recommended)
+- PostgreSQL 14+ with PostGIS & pgRouting
+- Redis 6+
+- Python 3.11+
+
+**Quick Setup**:
 ```bash
-# Start all services
-docker-compose up -d
+# Install dependencies
+sudo apt update
+sudo apt install postgresql-14 postgresql-14-postgis-3 postgresql-14-pgrouting redis-server python3.11
 
-# View logs
-docker-compose logs -f bot
+# Clone and setup
+git clone https://github.com/MonaNorouzi/weather-telegram-bot.git
+cd weather-telegram-bot
+pip install -r requirements.txt
 
-# Stop services
-docker-compose down
+# Configure
+cp .env.example .env
+# Edit .env with your credentials
+
+# Initialize database
+python database/init_db.py
+
+# Run bot
+python main.py
 ```
+
+**Process Management** (recommended):
+- Use `systemd` for auto-restart on failure
+- Or `supervisor` for process monitoring
 
 ### Systemd Service (Linux)
 
@@ -586,15 +593,13 @@ weather-telegram-bot/
 │   ├── backfill_geohashes.py     # Geohash backfilling
 │   └── ...
 │
-├── 📁 docs/                   # Documentation (14 files)
+├── 📁 docs/                   # Documentation (13 files)
 │   ├── H3_ARCHITECTURE.md        # H3 system deep-dive
 │   ├── CACHING_SYSTEM.md         # Cache architecture
-│   ├── DOCKER_QUICK_START.md     # Docker setup
 │   ├── OSRM_SETUP_GUIDE.md       # Routing engine setup
 │   ├── REDIS_SETUP.md            # Redis configuration
 │   └── ...
 │
-├── 📄 docker-compose.yml      # Local development stack
 ├── 📄 requirements.txt        # Python dependencies
 ├── 📄 .env.example            # Example configuration
 └── 📄 LICENSE                 # MIT License
@@ -753,7 +758,6 @@ Special thanks to the **OpenStreetMap** community for mapping the world!
 - [x] H3 hexagonal caching system (v2.1.0)
 - [x] Graph-based routing with pgRouting (v2.0.0)
 - [x] Two-layer cache architecture (v2.1.0)
-- [x] Docker deployment support (v2.0.0)
 - [x] Comprehensive documentation (v2.1.0)
 - [x] Admin dashboard and cache management (v2.0.0)
 
