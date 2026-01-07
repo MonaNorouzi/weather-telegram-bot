@@ -1,0 +1,98 @@
+version: '3.8'
+
+services:
+  # ============================================================================
+  # OSRM Backend - Self-Hosted Routing Engine for Iran
+  # ============================================================================
+  # IMPORTANT: Before starting this container, you MUST:
+  # 1. Download iran-latest.osm.pbf (~450MB) from Geofabrik
+  # 2. Run preprocessing steps (extract, partition, customize)
+  # 
+  # See docs/OSRM_SETUP_GUIDE.md for complete instructions.
+  # ============================================================================
+  
+  osrm-backend:
+    image: ghcr.io/project-osrm/osrm-backend:latest
+    container_name: weather-bot-osrm
+    
+    # CRITICAL: The command assumes you've already run the preprocessing steps.
+    # The preprocessed files (.osrm, .osrm.names, .osrm.hsgr, etc.) must exist
+    # in ./osrm-data/ directory before starting.
+    command: osrm-routed --algorithm=MLD /data/iran-latest.osrm
+    
+    ports:
+      - "5000:5000"  # OSRM HTTP API
+    
+    volumes:
+      # Mount your preprocessed OSRM data here
+      # This directory should contain iran-latest.osrm and related files
+      - ./osrm-data:/data:ro  # Read-only for safety
+    
+    restart: unless-stopped
+    
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    
+    # Resource limits (adjust based on your server)
+    deploy:
+      resources:
+        limits:
+          memory: 4G  # OSRM can use significant memory
+          cpus: '2.0'
+        reservations:
+          memory: 2G
+          cpus: '1.0'
+    
+    networks:
+      - weather-bot-network
+    
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ============================================================================
+  # Redis - High-Speed Cache Layer
+  # ============================================================================
+  # Optional: Uncomment if you want to run Redis in Docker instead of local
+  # ============================================================================
+  
+  # redis:
+  #   image: redis:7-alpine
+  #   container_name: weather-bot-redis
+  #   
+  #   ports:
+  #     - "6379:6379"
+  #   
+  #   volumes:
+  #     - redis-data:/data
+  #   
+  #   command: >
+  #     redis-server
+  #     --appendonly yes
+  #     --maxmemory 1gb
+  #     --maxmemory-policy allkeys-lru
+  #   
+  #   restart: unless-stopped
+  #   
+  #   healthcheck:
+  #     test: ["CMD", "redis-cli", "ping"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 3
+  #   
+  #   networks:
+  #     - weather-bot-network
+
+networks:
+  weather-bot-network:
+    driver: bridge
+
+# volumes:
+#   redis-data:
+#     driver: local

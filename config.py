@@ -51,6 +51,45 @@ WEATHER_BASE_URL = "https://api.openweathermap.org/data/2.5/weather"
 # Proxy Configuration
 PROXY_URL = os.getenv("PROXY_URL")
 
+# PostgreSQL Configuration for Graph Routing
+POSTGRES_HOST = os.getenv("POSTGRES_HOST", "localhost")
+POSTGRES_PORT = int(os.getenv("POSTGRES_PORT", "5432"))
+POSTGRES_DB = os.getenv("POSTGRES_DB", "weather_bot_routing")
+POSTGRES_USER = os.getenv("POSTGRES_USER", "postgres")
+POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD", "")
+
+# Redis Configuration for Caching
+REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
+REDIS_PORT = int(os.getenv("REDIS_PORT", "6379"))
+REDIS_DB = int(os.getenv("REDIS_DB", "0"))
+REDIS_PASSWORD = os.getenv("REDIS_PASSWORD", "")
+REDIS_MAX_CONNECTIONS = int(os.getenv("REDIS_MAX_CONNECTIONS", "50"))
+
+# OSRM Configuration for Routing
+OSRM_URL = os.getenv("OSRM_URL", "http://localhost:5000")
+OSRM_FALLBACK_PUBLIC = os.getenv("OSRM_FALLBACK_PUBLIC", "true").lower() == "true"
+
+# H3 Geospatial Configuration
+# Resolution 7 is the "Goldilocks zone" for weather routing:
+# - Average hexagon edge: ~5.16 km
+# - Area: ~25.18 km²
+# - Excellent weather accuracy (weather uniform within 5km)
+# - High cache reusability across routes
+# - Memory efficient (~450K hexagons for Iran vs 15M for Resolution 8)
+H3_RESOLUTION = int(os.getenv("H3_RESOLUTION", "7"))
+H3_WEATHER_CACHE_TTL = int(os.getenv("H3_WEATHER_CACHE_TTL", "3600"))  # 60 minutes
+PARALLEL_WEATHER_REQUESTS = int(os.getenv("PARALLEL_WEATHER_REQUESTS", "40"))  # Fixed connection pooling!
+
+def get_redis_url():
+    """Get Redis connection URL."""
+    if REDIS_PASSWORD:
+        return f"redis://:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}"
+    return f"redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}"
+
+def get_postgres_dsn():
+    """Get PostgreSQL connection string."""
+    return f"postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB}"
+
 def get_telethon_proxy_params():
     """
     Parses the PROXY_URL and returns a dictionary compatible with Telethon.
