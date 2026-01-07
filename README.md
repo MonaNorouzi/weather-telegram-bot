@@ -1,13 +1,13 @@
 # 🌤️ Weather Route Planner - Telegram Bot
 
-> **Intelligent weather forecasting and route planning bot with advanced H3-based caching and graph routing**
+> Weather forecasting and route planning system with H3-based spatial caching and graph routing
 
 [![Python 3.11+](https://img.shields.io/badge/Python-3.11+-3776ab.svg?logo=python&logoColor=white)](https://www.python.org/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-14+-316192.svg?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
 [![Redis](https://img.shields.io/badge/Redis-6+-DC382D.svg?logo=redis&logoColor=white)](https://redis.io/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-A production-ready Telegram bot for weather-aware route planning, featuring sub-second response times through intelligent H3 hexagonal caching, graph-based pathfinding with pgRouting, and a sophisticated two-layer cache architecture.
+A Telegram bot implementing weather-aware route planning with H3 hexagonal spatial indexing, pgRouting-based pathfinding, and a two-layer cache architecture.
 
 ---
 
@@ -713,9 +713,9 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 ---
 
-## 🙏 Acknowledgments
+##  Acknowledgments
 
-This project wouldn't be possible without these amazing open-source projects:
+This project utilizes the following open-source technologies:
 
 - **[H3](https://h3geo.org/)** by Uber - Hexagonal Hierarchical Geospatial Indexing
 - **[Open-Meteo](https://open-meteo.com/)** - Free weather API with no API key required
@@ -775,12 +775,11 @@ Special thanks to the **OpenStreetMap** community for mapping the world!
 
 ---
 
-<p align="center">
-  <b>Made with ❤️ for weather enthusiasts and road trip planners</b>
-  <br>
-  <sub>Powered by open-source technology • Built for performance • Designed for scale</sub>
-</p>
+## Citation
 
-<p align="center">
-  ⭐ Star this repo if you find it useful!
-</p>
+If you use this software in research or production, please reference:
+
+```
+Norouzi, M. (2026). Weather Route Planner: Telegram Bot with H3 Spatial Caching.
+GitHub: https://github.com/MonaNorouzi/weather-telegram-bot
+```
