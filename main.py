@@ -9,9 +9,14 @@ from handlers.message_handler import register_handlers
 from handlers.button_handler import register_button_handlers
 from handlers.admin_reload import register_admin_handlers
 from handlers.route_handler import register_route_handlers
+from handlers.graph_route_handler import register_graph_route_handlers # New import
 from core.database_manager import db_manager
 from core.scheduler_service import WeatherScheduler
-from core.user_permission_service import UserPermissionService
+from core.user_permission_service import UserPermissionService # Keep original import
+from core.button_factory import ButtonFactory # New import
+from core.graph_database import graph_db # New import
+from core.redis_manager import init_redis, close_redis, redis_manager # Redis imports
+from core.redis_geospatial_cache import redis_geo_cache # Geospatial cache
 
 # --- Logging setup ---
 logging.basicConfig(format='[%(levelname)s] %(asctime)s - %(message)s', level=logging.INFO)
@@ -21,8 +26,35 @@ async def on_startup(client: TelegramClient, loop: asyncio.AbstractEventLoop):
     """
     Executes startup tasks: DB init, Handler registration, Scheduler start, and Admin notification.
     """
-    logging.info("🗄 Initializing Database...")
+    # Step 2: Initialize databases
+    logging.info("🗄 Initializing SQLite Database...")
     await db_manager.init_db()
+    
+    # Initialize Graph Database (PostgreSQL)
+    try:
+        logging.info("🗄 Initializing Graph Database...")
+        await graph_db.initialize(min_size=2, max_size=10)
+        stats = await graph_db.get_graph_stats()
+        logging.info(f"  Graph: {stats.get('total_places', 0)} places, "
+                     f"{stats.get('total_nodes', 0)} nodes, "
+                     f"{stats.get('total_edges', 0)} edges")
+    except Exception as e:
+        logging.warning(f"⚠️ Graph database not available: {e}")
+        logging.warning("  Route caching will use file-based fallback")
+    
+    # Initialize Redis Cache
+    try:
+        logging.info("🔴 Initializing Redis Cache...")
+        redis_connected = await init_redis()
+        if redis_connected:
+            # Load geospatial index (all graph nodes)
+            node_count = await redis_geo_cache.load_all_nodes()
+            logging.info(f"  ✅ Redis connected! Loaded {node_count} nodes into geospatial index")
+        else:
+            logging.warning("  ⚠️ Redis not available - caching will fall back to PostgreSQL")
+    except Exception as e:
+        logging.warning(f"⚠️ Redis initialization failed: {e}")
+        logging.warning("  Caching will fall back to PostgreSQL")
 
     logging.info("🔐 Initializing Permission Service...")
     permission_service = UserPermissionService(config.PREMIUM_USER_IDS, config.ADMIN_ID)
@@ -31,10 +63,15 @@ async def on_startup(client: TelegramClient, loop: asyncio.AbstractEventLoop):
 
     logging.info("🔌 Connecting handlers...")
     # IMPORTANT: Route handlers FIRST (so they can intercept during wizard)
-    register_route_handlers(client)
+    from handlers.unified_route_handler import register_smart_route_handlers
+    from handlers.cache_admin_handler import register_cache_admin_handlers
+    register_smart_route_handlers(client)  # Smart unified handler
+    register_route_handlers(client)  # Keep old /route for backward compatibility
+    register_graph_route_handlers(client)  # Keep /graph_route for testing
     register_handlers(client)
     register_button_handlers(client)
     register_admin_handlers(client)
+    register_cache_admin_handlers(client)  # Cache admin commands
 
     logging.info("⏰ Starting Scheduler Service...")
     scheduler = WeatherScheduler(client, loop)
@@ -96,6 +133,19 @@ def main():
                  client.weather_scheduler.scheduler.shutdown()
              except:
                  pass
+        
+        # Close Redis connection
+        try:
+            logging.info("Closing Redis connection...")
+            loop.run_until_complete(close_redis())
+        except Exception as e:
+            logging.warning(f"⚠️ Error closing Redis: {e}")
+        
+        # Close graph database pool
+        try:
+            loop.run_until_complete(graph_db.close()) # Ensure graph_db.close() is awaited
+        except Exception as e:
+            logging.warning(f"⚠️ Error closing graph database: {e}")
         
         if client.is_connected():
             # client.disconnect() is a coroutine, need to await it

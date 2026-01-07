@@ -22,10 +22,16 @@ def register_handlers(client: TelegramClient):
         text = event.text
         
         if text and text.lower() == '/start':
+            # Buttons for all users
+            buttons = [
+                [Button.inline("⚙️ Manage Cities & Schedule", b"open_settings")],
+                [Button.inline("🗑️ Clear All Caches", b"admin_clear_cache")]
+            ]
+            
             await event.reply(
                 "👋 **Hello! Welcome to Weather Bot.**\n\n"
                 "What would you like to do?",
-                buttons=[[Button.inline("⚙️ Manage Cities & Schedule", b"open_settings")]]
+                buttons=buttons
             )
             return
 

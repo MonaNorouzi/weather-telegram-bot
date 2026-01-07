@@ -13,11 +13,11 @@ class OverpassService:
     BASE_URL = "https://overpass-api.de/api/interpreter"
     
     # Manager's proven parameters - exactly as tested
-    SEARCH_RADIUS = 5000      # 5km radius for comprehensive coverage
-    BATCH_SIZE = 15           # 15 points per batch (manager's setting)
+    SEARCH_RADIUS = 3000      # 3km radius - focus on major places only
+    BATCH_SIZE = 20           # 20 points per batch (larger for speed)
     MAX_RETRIES = 5           # Maximum retry attempts per batch
-    CONCURRENCY = 2           # 2 concurrent batches (manager's setting)
-    SAMPLE_INTERVAL_KM = 5.0  # Sample every 5km along route
+    CONCURRENCY = 1           # Reduced to 1 to avoid rate limiting
+    SAMPLE_INTERVAL_KM = 20.0  # 20km for long routes (less API load)
     REQUEST_DELAY = 0.8       # Delay between batches (slightly longer)
     QUERY_TIMEOUT = 90        # Overpass query timeout in seconds
     
@@ -183,4 +183,20 @@ class OverpassService:
         return unique
 
 
+    # City boundary fetching (separate from route places)
+    async def get_city_boundary(self, city_name: str, country: str = "Iran"):
+        """Get administrative boundary polygon for a city.
+        
+        Args:
+            city_name: City name
+            country: Country for disambiguation
+            
+        Returns:
+            Dict with coordinates, center, osm_id, admin_level
+        """
+        from core.boundary_fetcher import get_city_boundary
+        return await get_city_boundary(city_name, country)
+
+
 overpass_service = OverpassService()
+

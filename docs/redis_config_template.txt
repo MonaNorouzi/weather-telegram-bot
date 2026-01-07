@@ -1,0 +1,17 @@
+# .env.example - Add these Redis settings
+
+# ============================================
+# REDIS CACHE CONFIGURATION
+# ============================================
+# Redis server settings for high-performance caching
+REDIS_HOST=localhost
+REDIS_PORT=6379
+REDIS_DB=0
+REDIS_PASSWORD=
+REDIS_MAX_CONNECTIONS=50
+
+# Notes:
+# - Install Redis: docker run -d -p 6379:6379 redis:latest
+# - Or on Windows: Download from https://github.com/tporadowski/redis/releases
+# - Leave REDIS_PASSWORD empty if Redis has no auth
+# - Max connections: 50 is good for most use cases

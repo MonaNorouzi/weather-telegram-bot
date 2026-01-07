@@ -1,0 +1,48 @@
+# Auto detect text files and normalize line endings to LF
+* text=auto eol=lf
+
+# Explicitly declare text files you want to always be normalized
+*.py text eol=lf
+*.md text eol=lf
+*.json text eol=lf
+*.txt text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.sql text eol=lf
+*.sh text eol=lf
+*.env.example text eol=lf
+*.gitignore text eol=lf
+*.gitattributes text eol=lf
+
+# Windows batch files should use CRLF
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Denote binary files (should never be modified)
+*.db binary
+*.sqlite binary
+*.sqlite3 binary
+*.session binary
+*.session-journal binary
+*.pyc binary
+*.pyo binary
+*.pyd binary
+*.so binary
+*.dll binary
+*.exe binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.svg binary
+*.mov binary
+*.mp4 binary
+*.mp3 binary
+*.wav binary
+*.pdf binary
+*.zip binary
+*.gz binary
+*.tar binary
+*.7z binary
+*.rar binary
