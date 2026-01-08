@@ -6,7 +6,6 @@ Welcome to the Weather Route Planner documentation!
 
 ### Getting Started
 - [Main README](../README.md) - Project overview and quick start
-- [Installation Guide](DOCKER_QUICK_START.md) - Step-by-step setup with Docker
 - [Redis Setup](REDIS_SETUP.md) - Redis configuration guide
 
 ### Architecture & Design
@@ -31,7 +30,7 @@ Welcome to the Weather Route Planner documentation!
 
 ## 🚀 Quick Links
 
-**New Users**: Start with [Main README](../README.md) → [Docker Quick Start](DOCKER_QUICK_START.md)
+**New Users**: Start with [Main README](../README.md) → [Installation Guide](../README.md#installation)
 
 **Developers**: Check [H3 Architecture](H3_ARCHITECTURE.md) and [Caching System](CACHING_SYSTEM.md)
 
