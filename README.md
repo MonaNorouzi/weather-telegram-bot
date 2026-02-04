@@ -1,11 +1,16 @@
+> ⚠️ **Warning: Work in Progress**
+> This project is currently under active development. Features may change, and stability is not guaranteed. Not ready for production use yet.
+
 # 🌤️ Weather Route Planner - Telegram Bot
 
 > Weather forecasting and route planning system with H3-based spatial caching and graph routing
 
+[![Status](https://img.shields.io/badge/Status-Work_in_Progress-orange)](https://github.com/MonaNorouzi/weather-telegram-bot)
 [![Python 3.11+](https://img.shields.io/badge/Python-3.11+-3776ab.svg?logo=python&logoColor=white)](https://www.python.org/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-14+-316192.svg?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
 [![Redis](https://img.shields.io/badge/Redis-6+-DC382D.svg?logo=redis&logoColor=white)](https://redis.io/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 
 A Telegram bot implementing weather-aware route planning with H3 hexagonal spatial indexing, pgRouting-based pathfinding, and a two-layer cache architecture.
 
