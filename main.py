@@ -8,8 +8,6 @@ import config
 from handlers.message_handler import register_handlers
 from handlers.button_handler import register_button_handlers
 from handlers.admin_reload import register_admin_handlers
-from handlers.route_handler import register_route_handlers
-from handlers.graph_route_handler import register_graph_route_handlers # New import
 from core.database_manager import db_manager
 from core.scheduler_service import WeatherScheduler
 from core.user_permission_service import UserPermissionService # Keep original import
@@ -66,8 +64,6 @@ async def on_startup(client: TelegramClient, loop: asyncio.AbstractEventLoop):
     from handlers.unified_route_handler import register_smart_route_handlers
     from handlers.cache_admin_handler import register_cache_admin_handlers
     register_smart_route_handlers(client)  # Smart unified handler
-    register_route_handlers(client)  # Keep old /route for backward compatibility
-    register_graph_route_handlers(client)  # Keep /graph_route for testing
     register_handlers(client)
     register_button_handlers(client)
     register_admin_handlers(client)
